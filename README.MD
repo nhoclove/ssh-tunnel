@@ -1,4 +1,4 @@
-# TUNNEL-ALIVE
+# SSH-TUNNEl
 
 ## Description
 A simple cli-app which allows SSH tunnelling(Port forwarding)
