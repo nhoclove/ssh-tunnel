@@ -1,0 +1,8 @@
+tunnels:
+  - name: whoiam
+    sshAddr: localhost:2222
+    remoteAddr: 172.17.0.3:80
+    localAddr: 127.0.0.1:8880
+    auth:
+      username: test
+      password: test
