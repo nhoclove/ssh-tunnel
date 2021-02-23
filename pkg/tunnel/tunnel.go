@@ -2,9 +2,7 @@ package tunnel
 
 import (
 	"context"
-	"io"
 	"net"
-	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -95,25 +93,8 @@ func (t *Tunnel) forward(localConn net.Conn) {
 		log.Fatalf("Failed to establish connection to Remote server: %v", err)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go copy(localConn, remoteConn, &wg)
-	wg.Add(1)
-	go copy(remoteConn, localConn, &wg)
-	wg.Wait()
+	Pipe(remoteConn, localConn)
 
 	log.Infof("Close connection: %s", localConn.LocalAddr().String())
 	sshConn.Close()
-}
-
-func copy(writer, reader net.Conn, wg *sync.WaitGroup) {
-	defer func() {
-		writer.Close()
-		reader.Close()
-		wg.Done()
-	}()
-
-	if _, err := io.Copy(writer, reader); err != nil {
-		log.Errorf("Failed to copy io from %s to %s. Error: %s", reader.LocalAddr().String(), writer.LocalAddr().String(), err)
-	}
 }
