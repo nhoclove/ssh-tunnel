@@ -15,34 +15,28 @@ type Tunnel struct {
 	sshAddr    string
 	remoteAddr string
 	localAddr  string
-	username   string
-	password   string
+
+	clientConfig *ssh.ClientConfig
 
 	listener   *net.Listener
 	onShutdown []func()
 }
 
 // New initializes a new tunnel
-func New(name, sshAddr, remoteAddr, localAddr, username, password string) *Tunnel {
+func New(name string, authMethod ssh.AuthMethod, sshUser, sshAddr, remoteAddr, localAddr string) *Tunnel {
 	return &Tunnel{
 		name:       name,
 		sshAddr:    sshAddr,
 		remoteAddr: remoteAddr,
 		localAddr:  localAddr,
-		username:   username,
-		password:   password,
-	}
-}
-
-func initSSHConfig(user, pass string) (*ssh.ClientConfig, error) {
-	config := ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(pass),
+		clientConfig: &ssh.ClientConfig{
+			User: sshUser,
+			Auth: []ssh.AuthMethod{authMethod},
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				return nil
+			},
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	return &config, nil
 }
 
 // Start starts a local server then forwards all connections to remote server
@@ -77,13 +71,8 @@ func (t *Tunnel) Shutdown(ctx context.Context) error {
 
 func (t *Tunnel) forward(localConn net.Conn) {
 	log.Infof("New connection from: %s", localConn.LocalAddr())
-	cfg, err := initSSHConfig(t.username, t.password)
-	if err != nil {
-		log.Fatalf("Failed to init SSH config: %v", err)
-	}
-
 	// Establish connection to SSH server
-	sshConn, err := ssh.Dial("tcp", t.sshAddr, cfg)
+	sshConn, err := ssh.Dial("tcp", t.sshAddr, t.clientConfig)
 	if err != nil {
 		log.Fatalf("Failed to establish connection to SSH server: %v", err)
 	}

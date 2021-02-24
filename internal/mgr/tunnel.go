@@ -8,6 +8,7 @@ import (
 	"sshtunnel/pkg/tunnel"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 )
 
 var (
@@ -61,7 +62,8 @@ func (m *TunnelManager) Shutdown() error {
 // startTunnel starts a tunnel with the given tunnel configuration
 func (m *TunnelManager) startTunnel(t *config.Tunnel) (string, error) {
 	log.Infof("Starting tunnel: %s", t.Name)
-	tun := tunnel.New(t.Name, t.SSHAddr, t.RemoteAddr, t.LocalAddr, t.Auth.Username, t.Auth.Password)
+	authMethod := ssh.Password(t.Auth.Password)
+	tun := tunnel.New(t.Name, authMethod, t.Auth.Username, t.SSHAddr, t.RemoteAddr, t.LocalAddr)
 	m.tunnels[t.Name] = tun
 	go tun.Start()
 	return t.Name, nil
