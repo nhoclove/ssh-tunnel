@@ -23,19 +23,13 @@ type Tunnel struct {
 }
 
 // New initializes a new tunnel
-func New(name string, authMethod ssh.AuthMethod, sshUser, sshAddr, remoteAddr, localAddr string) *Tunnel {
+func New(name string, sshClientConfig *ssh.ClientConfig, sshAddr, remoteAddr, localAddr string) *Tunnel {
 	return &Tunnel{
-		name:       name,
-		sshAddr:    sshAddr,
-		remoteAddr: remoteAddr,
-		localAddr:  localAddr,
-		clientConfig: &ssh.ClientConfig{
-			User: sshUser,
-			Auth: []ssh.AuthMethod{authMethod},
-			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-				return nil
-			},
-		},
+		name:         name,
+		sshAddr:      sshAddr,
+		remoteAddr:   remoteAddr,
+		localAddr:    localAddr,
+		clientConfig: sshClientConfig,
 	}
 }
 

@@ -4,5 +4,6 @@ tunnels:
     remoteAddr: 172.17.0.3:80
     localAddr: 127.0.0.1:8880
     auth:
-      username: test
-      password: test
+      user: test
+      password:
+      keyPath: <key_path>

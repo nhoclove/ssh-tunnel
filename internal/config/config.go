@@ -10,8 +10,9 @@ type (
 	}
 
 	Auth struct {
-		Username string `mapstructure:"username"`
+		User     string `mapstructure:"user"`
 		Password string `mapstructure:"password"`
+		KeyPath  string `mapstructure:"keyPath"`
 	}
 
 	Config struct {

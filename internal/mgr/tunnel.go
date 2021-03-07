@@ -3,6 +3,7 @@ package mgr
 import (
 	"context"
 	"errors"
+	"net"
 
 	"sshtunnel/internal/config"
 	"sshtunnel/pkg/tunnel"
@@ -62,8 +63,18 @@ func (m *TunnelManager) Shutdown() error {
 // startTunnel starts a tunnel with the given tunnel configuration
 func (m *TunnelManager) startTunnel(t *config.Tunnel) (string, error) {
 	log.Infof("Starting tunnel: %s", t.Name)
-	authMethod := ssh.Password(t.Auth.Password)
-	tun := tunnel.New(t.Name, authMethod, t.Auth.Username, t.SSHAddr, t.RemoteAddr, t.LocalAddr)
+	authMethods, err := m.getAuthMethods(t.Auth)
+	if err != nil {
+		return t.Name, err
+	}
+	sshClientConfig := &ssh.ClientConfig{
+		User: t.Auth.User,
+		Auth: authMethods,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	tun := tunnel.New(t.Name, sshClientConfig, t.SSHAddr, t.RemoteAddr, t.LocalAddr)
 	m.tunnels[t.Name] = tun
 	go tun.Start()
 	return t.Name, nil
